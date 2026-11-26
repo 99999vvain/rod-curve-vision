@@ -55,7 +55,7 @@ See [docs/usage.md](docs/usage.md) for the parameter table, the CSV schema, the 
 
 ## Authors
 
-Joint work by **Lin Weixu (林卫叙)** and **Wang Feiyang (王飞扬)**, School of Mechanics and Civil Engineering, China University of Mining and Technology.
+Joint work by **Lin Weixu (林卫叙)** and **Wang Feiyang (王飞扬)**.
 
 ## License
 
