@@ -1,0 +1,1170 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>鱼竿变形曲线演示</title>
+<style>
+:root{color-scheme:light;--ink:#142b28;--quiet:#46635f;--teal:#0d6f61;--paper:#fff;--wash:#eef4f1;--border:#d2e0db;--amber:#a44824;--violet:#6558a7}
+[hidden]{display:none!important} *{box-sizing:border-box} body{margin:0;background:var(--wash);color:var(--ink);font:15px/1.55 "Segoe UI","Microsoft YaHei","PingFang SC",sans-serif}
+main{max-width:1230px;margin:auto;padding:32px 24px 46px} header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:24px}
+h1,h2,h3,p{margin:0} h1{font-size:clamp(27px,4.4vw,42px);font-weight:720;line-height:1.2;letter-spacing:-.035em}
+header p{margin-top:9px;color:var(--quiet)} h2{font-size:17px;font-weight:690} button,input,select{font:inherit}
+button{cursor:pointer;border:1px solid var(--border);border-radius:8px;background:var(--paper);color:var(--ink);padding:8px 14px;white-space:nowrap}
+button:hover{background:#e3f0eb} button:disabled{opacity:.45;cursor:default}
+:focus-visible{outline:2px solid #158976;outline-offset:3px}
+.layout{display:grid;grid-template-columns:284px minmax(0,1fr);gap:18px;align-items:start}
+.card{border:1px solid var(--border);border-radius:14px;background:var(--paper);padding:17px 19px;min-width:0}
+.controls{display:grid;gap:15px} .card + .card{margin-top:13px} .control label{display:flex;justify-content:space-between} output{color:var(--teal);font-weight:700;font-variant-numeric:tabular-nums}
+.control input[type=number]{margin-top:4px}
+input[type=range]{accent-color:var(--teal);width:100%;margin:5px 0 0;display:block}
+input[type=checkbox]{accent-color:var(--teal);width:16px;height:16px;margin:0;flex:none}
+select,input[type=number]{border:1px solid var(--border);padding:6px 7px;border-radius:6px;background:#fff;color:var(--ink);width:100%;min-height:35px}
+.options{display:grid;gap:8px} label.check{display:flex;align-items:center;gap:8px;font-size:14px}
+.small{font-size:13px;color:var(--quiet)} .status{padding:8px 11px;margin:0 0 12px;background:#edf6f1;border-radius:7px;color:#205e4d}
+.status.error{background:#fff0e8;color:#8c321b} .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:8px}
+.metric{background:#f1f6f3;border-radius:9px;padding:8px 10px;color:var(--quiet);font-size:12px}
+.metric strong{display:block;font-size:clamp(16px,2.1vw,21px);font-weight:720;color:var(--ink);font-variant-numeric:tabular-nums}
+.panelhead{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+svg{width:100%;height:auto;display:block;overflow:visible;font:12px "Segoe UI","Microsoft YaHei",sans-serif}
+.legend{display:flex;flex-wrap:wrap;gap:5px 15px;color:var(--quiet);font-size:12px;margin:5px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}.key{width:17px;border-top:2px solid var(--key)} .dash{border-top-style:dashed}
+.tabs{display:flex;gap:4px}.tabs button{padding:4px 9px;font-size:13px}.tabs button[aria-pressed=true]{background:#e3f1eb;color:#0c624e;border-color:#bedacd}
+details{margin-top:13px} summary{cursor:pointer;font-weight:690}
+.theory{display:grid;gap:8px;margin-top:10px;max-width:800px}
+.eq{display:block;background:#eff5f2;padding:8px 11px;border-radius:7px;overflow-wrap:anywhere;font-family:"Cambria Math","Microsoft YaHei",serif}
+.scroll{overflow-x:auto; margin-top:10px} table{border-collapse:collapse;width:100%;min-width:660px;font-size:13px} th,td{padding:6px;border-bottom:1px solid var(--border);text-align:right} th:first-child,td:first-child{text-align:left}
+td input[type=number]{min-width:72px;text-align:right} .cols{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}
+.formlabel{font-size:12px;color:var(--quiet);display:block}.formlabel input,.formlabel select{display:block;margin-top:3px}.cal-button{display:flex;align-items:end}.data-help{margin-top:9px}
+.import-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.import-actions button{font-size:13px;padding:6px 11px}
+#experiment-open{color:#fff;background:var(--teal);border-color:var(--teal)}
+#experiment-open:hover{background:#0a594e}
+.import-note{margin:9px 0 3px;overflow-wrap:anywhere}
+.import-note.error,#curve-fit-note.warning{color:#8c321b}
+#experiment-report .metrics{margin:10px 0 8px}
+#experiment-report .metric small{display:block;line-height:1.4}
+#experiment-coverage{margin-top:4px}
+#experiment-report .small + .small{margin-top:5px}
+.curve-fit{border-top:1px solid var(--border);margin-top:14px;padding-top:12px}
+.curve-fit h3{font-size:15px;margin-bottom:4px}
+.curve-fit .import-actions{margin:9px 0 6px}
+#fit-curve{color:#fff;background:var(--teal);border-color:var(--teal)}
+#fit-curve:hover:not(:disabled){background:#0a594e}
+#curve-fit-values{grid-template-columns:repeat(3,minmax(0,1fr))}
+[data-embedded] main{padding-top:14px}
+[data-embedded] header{justify-content:flex-end;align-items:flex-end;margin-bottom:10px}
+[data-embedded] header > div{display:none}
+@media(max-width:820px){.layout{grid-template-columns:1fr}.controls{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 17px}.controls h2,.options{grid-column:1/-1} main{padding:24px 15px} header{align-items:flex-start;flex-direction:column;gap:8px}}
+@media(max-width:460px){main{padding:17px 10px}.card{padding:12px}.metrics,.cols,#curve-fit-values{grid-template-columns:1fr 1fr}.control:nth-last-child(2){grid-column:1/-1}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div><h1>鱼竿变形曲线演示</h1><p>调整载荷和夹持角，观察竿身轮廓、弯矩和弯曲刚度的变化。</p></div>
+  <button id="export" disabled>导出预测 CSV</button>
+</header>
+<div class="layout">
+  <section class="controls card" aria-label="工况参数">
+    <h2>加载条件</h2>
+    <div class="control"><label for="mass">端载等效质量（g）</label><input type="number" id="mass" min="0" step="any" inputmode="decimal" value="500"></div>
+    <div class="control">
+      <label for="alpha">夹持角（°）</label>
+      <input type="number" id="alpha" min="-75" max="75" step="any" value="0" required aria-describedby="alpha-hint">
+      <p class="small" id="alpha-hint">相对水平线，上仰为正，下倾为负。</p>
+    </div>
+    <div class="control"><label for="beta">拉力偏角 <output id="beta-value"></output></label><input type="range" id="beta" min="-60" max="60" step="1" value="0"><p class="small">从竖直向下计，向右为正。</p></div>
+    <div class="options">
+      <label class="check"><input type="checkbox" id="gravity" checked>计入竿身自重</label>
+      <label class="check"><input type="checkbox" id="flex">计入接头附加柔度</label>
+      <label class="formlabel" id="k-control" hidden for="K">各接头共用转动刚度 K (N·m/rad)<input type="number" id="K" min="1" step="10" value="500"></label>
+    </div>
+    <h2>曲线对照</h2>
+    <div class="options">
+      <label class="check"><input type="checkbox" id="no-gravity" checked>同载荷下不计自重</label>
+      <label class="check"><input type="checkbox" id="linear">小转角近似</label>
+      <label class="check"><input type="checkbox" id="multi">叠加 0、100、200、500、1000 g</label>
+    </div>
+  </section>
+  <section aria-label="计算结果">
+    <div class="card">
+      <div class="panelhead">
+        <div><h2>变形后中心线</h2><p class="small" id="load-text"></p></div>
+        <div class="import-actions">
+          <input id="experiment-file" type="file" accept=".csv,text/csv" hidden>
+          <button id="experiment-open" type="button" aria-describedby="experiment-import-note">导入实验 CSV</button>
+          <button id="experiment-clear" type="button" hidden>移除实验曲线</button>
+        </div>
+      </div>
+      <p id="status" class="status small" role="status">正在计算</p>
+      <svg id="curve" viewBox="0 0 760 410" role="img" aria-label="鱼竿变形曲线 等比例坐标"></svg>
+      <div class="legend" id="legend"></div>
+      <p id="experiment-import-note" class="small import-note" role="status">导入图片识别程序导出的毫米 CSV，可对照曲线或反算四节竿的刚度。</p>
+      <div class="metrics">
+        <div class="metric">梢端横坐标<strong id="tip-x">—</strong></div>
+        <div class="metric">梢端竖直下降<strong id="tip-drop">—</strong></div>
+        <div class="metric">根部弯矩<strong id="root-m">—</strong></div>
+        <div class="metric">名义峰值弯曲应变<strong id="strain-max">—</strong></div>
+      </div>
+    </div>
+    <section id="experiment-report" class="card" aria-labelledby="experiment-title" hidden>
+      <h2 id="experiment-title">实验与预测误差</h2>
+      <p id="experiment-coverage" class="small" role="status"></p>
+      <div id="experiment-values" hidden>
+        <div class="metrics">
+          <div class="metric">全曲线二维 RMSE<strong id="experiment-rmse">—</strong></div>
+          <div class="metric">竖直 RMSE<strong id="experiment-y-rmse">—</strong></div>
+          <div class="metric">最大二维误差<strong id="experiment-max">—</strong><small id="experiment-max-s"></small></div>
+          <div class="metric">末端竖直差<strong id="experiment-tip-y">—</strong><small>实验末点 − 模型竿梢，向上为正</small></div>
+        </div>
+        <p class="small" id="experiment-tip-detail"></p>
+        <p class="small">全曲线误差按相同弧长比较，仅计算共同区间。末端竖直差使用两条曲线各自的末点。</p>
+      </div>
+      <div class="curve-fit" aria-labelledby="curve-fit-title">
+        <h3 id="curve-fit-title">由实验曲线反算刚度</h3>
+        <p class="small">四节竿可同时拟合前三节的基准刚度 B₀ 和第 4 节元端刚度 B₄。请先选对竿型或填写几何，并按拍摄工况设置端载、夹持角、拉力偏角和自重。</p>
+        <p id="curve-fit-condition" class="small"></p>
+        <div class="import-actions">
+          <button id="fit-curve" type="button" disabled>反算 B₀ 和 B₄</button>
+          <button id="use-experiment-settings" type="button" hidden></button>
+        </div>
+        <p id="curve-fit-note" class="small" role="status"></p>
+        <div id="curve-fit-values" class="metrics" hidden>
+          <div class="metric">前三节基准刚度 B₀<strong id="curve-fit-base">—</strong><small>N·m² · 第一节元端单管</small></div>
+          <div class="metric">第四节独立刚度 B₄<strong id="curve-fit-tip">—</strong><small>N·m² · 第四节元端单管</small></div>
+          <div class="metric">拟合二维 RMSE<strong id="curve-fit-rmse">—</strong><small>用于反算的这条曲线</small></div>
+        </div>
+      </div>
+    </section>
+    <div class="card">
+      <div class="panelhead"><h2>沿竿长分布</h2><div class="tabs" aria-label="选择沿程变量"><button data-field="strain" aria-pressed="true">应变</button><button data-field="M" aria-pressed="false">弯矩</button><button data-field="B" aria-pressed="false">刚度</button></div></div>
+      <svg id="profile" viewBox="0 0 760 230" role="img" aria-label="沿弧长的计算结果"></svg>
+      <p id="profile-note" class="small">浅色带标出搭接区。</p>
+    </div>
+  </section>
+</div>
+
+<details class="card" id="data-settings">
+  <summary>实测数据与几何预设</summary>
+  <div class="cols">
+    <label class="formlabel">数据来源<select id="preset"><option value="four">4.5 m 四节示例</option><option value="four36">3.6 m 四节示例</option><option value="taper">4.5 m 单段锥杆</option><option value="pvc">2.0 m PVC 等截面管</option><option value="actual28">3.6 m 28 调（实测）</option><option value="actual37">3.6 m 37 调（实测）</option><option value="measured">录入实测数据</option></select></label>
+    <label class="formlabel">实测装配总长 (m，选填)<input id="measured-length" type="number" min="0" step="any"></label>
+    <label class="formlabel">实测总质量 (g，选填)<input id="measured-mass" type="number" min="0" step="any"></label>
+    <label class="formlabel">夹持长度 (mm)<input id="clamp" type="number" min="0" step="any"></label>
+    <label class="formlabel" id="section-count-label" hidden>杆节数<input id="section-count" type="number" min="1" max="12" step="1" value="4"></label>
+  </div>
+  <div id="joints" class="cols" aria-label="各接头搭接长度"></div>
+  <p class="small data-help">从柄到梢输入各节。元径是该节靠柄端的外径，先径是靠梢端的外径。每节只测一次壁厚时，可把先端壁厚留空。</p>
+  <div class="scroll"><table><thead><tr><th>从柄到梢</th><th>长度 m</th><th>质量 g</th><th>元径 mm</th><th>先径 mm</th><th>元端壁厚 mm</th><th>先端壁厚 mm</th></tr></thead><tbody id="sections"></tbody></table></div>
+  <p class="small data-help" id="geometry" aria-live="polite"></p>
+</details>
+<details class="card" id="stiffness-settings">
+  <summary>弯曲刚度标定</summary>
+  <p class="small data-help">将鱼竿水平夹持，在竿梢直接悬挂已知质量。测量<strong>夹具出口中心到加载后梢端的竖直落差</strong>，以向下为正。校准计入杆身自重。挂重质量包含吊钩与容器。</p>
+  <div class="cols">
+    <label class="formlabel">标定挂重 (g)<input id="cal-mass" type="number" min="0" step="any"></label>
+    <label class="formlabel">加载后梢端落差 (mm)<input id="cal-drop" type="number" min="0" step="any"></label>
+    <label class="formlabel">基准弯曲刚度 B₀ (N·m²)<input id="Bref" type="number" min="0" step="any"></label>
+    <label class="formlabel" id="tip-stiffness-control">第 4 节元端弯曲刚度 B₄ (N·m²)
+      <input id="Btip" type="number" min="0" step="any" aria-describedby="tip-stiffness-help">
+    </label>
+    <div class="cal-button"><button type="button" id="fit">由实测落差标定</button></div>
+  </div>
+  <p class="small data-help" id="fit-note" role="status"></p>
+  <p class="small data-help">B₀ 指第一节元端单管的等效弯曲刚度。可输入独立测得的 B₀。若已有接头转动刚度，打开「计入接头附加柔度」后会将其用于标定。</p>
+  <p class="small data-help" id="tip-stiffness-help">四节竿可在导入实验 CSV 后同时反算 B₀ 和 B₄。也可手动填写 B₄。B₄ 留空时各节按同一等效模量计算。若使用梢端落差标定，已填的 B₄ 会作为固定值。</p>
+</details>
+
+
+<details class="card">
+  <summary>力学公式与计算方法</summary>
+  <div class="theory">
+    <p>以夹具出口为原点，弧长 s 从根部指向竿梢。x 向右，y 向上，切线角 θ 逆时针为正。模型采用初始直杆，允许大转角，忽略轴向伸长和剪切变形。</p>
+    <p class="eq">A = π(D² − d²)/4，I = π(D⁴ − d⁴)/64，d = max(0, D − 2t)。</p>
+    <p class="eq">每节线质量 μᵢ = mᵢAᵢ / ∫ Aᵢ ds，q = g Σ μᵢ。搭接处两节质量都计入；夹具内部不计入自由段重力。</p>
+    <p class="eq">B<sub>nom</sub>(s) = Σ Eᵢ Iᵢ(s)，E₁ = E₂ = E₃ = B₀/I₀。四节竿填写 B₄ 时，E₄ = B₄/I₄,元端。未单独填写的杆节取 Eᵢ = B₀/I₀。</p>
+    <p class="eq">I₀ 为第一节元端的截面惯性矩。搭接区对两根管的弯曲刚度求和。若已知接头的转动刚度 K，再计入附加柔度 1/B = 1/B<sub>nom</sub> + 1/(Kaⱼ)。</p>
+    <p class="eq">R<sub>x</sub> = P sin β，R<sub>y</sub>(s) = −P cos β − ∫<sub>s</sub><sup>L</sup> q(u) du，P = mg。</p>
+    <p class="eq">x′ = cos θ，y′ = sin θ，θ′ = M/B，M′ = R<sub>x</sub> sin θ − R<sub>y</sub> cos θ。边界为 x(0) = y(0) = 0、θ(0) = α、M(L) = 0。</p>
+    <p>从杆节和搭接边界划分网格，以节点转角为未知量。先施加自重，再逐级增大端载，用总势能的驻值方程求转角，最后累加各段的坐标增量。</p>
+    <p class="small">节内等效模量取常数，质量按截面积分配。刚度标定和曲线验证应使用不同加载工况。</p>
+  </div>
+</details>
+</main>
+<script>
+
+"use strict";
+const embedded=typeof window!=="undefined"&&window.frameElement?.id==="model";
+if(embedded)document.documentElement.dataset.embedded="";
+
+const G = 9.81;
+const deg = Math.PI / 180;
+// Each section is [length (m), butt OD, tip OD, butt wall, tip wall (mm), mass (g)].
+function section(D0,D1,t0,t1,u) {
+  const D=(D0+(D1-D0)*u)/1000;
+  const di=Math.max(0,D-(t0+(t1-t0)*u)/500);
+  return {D,di,A:Math.PI*(D**2-di**2)/4,I:Math.PI*(D**4-di**4)/64};
+}
+function properties(tube,s) {
+  return section(tube.D0,tube.D1,tube.t0,tube.t1,Math.max(0,Math.min(1,(s-tube.a)/tube.length)));
+}
+
+const presets = {
+  four:{"clamp":150,"overlaps":[100,100,100],"length":4.5,"mass":153.31034981,"Bref":154.885242777328,"sections":[[1.2,16,15.2,0.8,0.8,69.1854100544],[1.2,13.6,10.6,0.8,0.7,49.8828364722],[1.2,9.2,5.8,0.7,0.6,26.1782632638],[1.2,4.6,1.2,0.6,0.6,8.0638400232]]},
+  four36:{"clamp":150,"overlaps":[80,80,80],"length":3.6,"mass":81.91030543,"Bref":64.279323920954,"sections":[[0.96,12.8,12.0,0.65,0.65,35.702943871],[0.96,10.75,8.6,0.65,0.6,26.4821181053],[0.96,7.5,4.7,0.6,0.55,14.9044695309],[0.96,3.75,1.1,0.55,0.55,4.8207739269]]},
+  taper:{"clamp":0,"overlaps":[],"length":4.5,"mass":105.18052204,"Bref":120.659098780941,"sections":[[4.5,16,1.2,0.6,0.6,105.1805220422]]},
+  pvc:{"clamp":150,"overlaps":[],"length":2.0,"mass":244.10174918,"Bref":11.262462400964,"sections":[[2,20,20,1.5,1.5,244.1017491839]]},
+  actual28:{"clamp":100.0,"overlaps":[64.0,95.0,53.0],"length":3.45,"mass":91.5,"Bref":null,"sections":[[0.952,12.8,12.33,0.67,0.67,47.9],[0.986,11.17,9.8,0.74,0.74,28.3],[0.885,8.6,4.15,0.64,0.64,12.4],[0.839,3.23,1.3,0.6,0.6,3.0]],"note":"来自《鱼竿物理数据.xlsx》。各节只有一个壁厚测量值，按等壁厚处理。"},
+  actual37:{"clamp":83.0,"overlaps":[77.0,80.0,66.0],"length":3.437,"mass":60.2,"Bref":null,"sections":[[0.994,9.17,8.68,0.64,0.64,37.1],[0.981,7.74,6.42,0.82,0.82,13.6],[0.843,5.64,3.42,0.7,0.7,7.3],[0.855,2.61,1.27,0.64,0.635,2.2]],"note":"来自《鱼竿物理数据.xlsx》。各节只有一个壁厚测量值，按等壁厚处理。第 4 节先径 1.27 mm，表中壁厚 0.64 mm，计算时将先端壁厚限制为 0.635 mm，按实心竿尖处理。"},
+  measured:{clamp:null, overlaps:[null,null,null],length:null,mass:null,Bref:null,
+    sections:Array.from({length:4},()=>Array(6).fill(null))}
+};
+
+function model(cfg, maxStep=.005) {
+  const overlaps=cfg.overlaps.map(a=>a/1000);
+  const Btip=cfg.sections.length===4?cfg.Btip??null:null;
+  if(Btip!==null&&!(Number.isFinite(Btip)&&Btip>0))
+    throw Error("第 4 节元端弯曲刚度 B₄ 须为正数，留空可沿用统一模量。");
+  if (cfg.overlaps.length!==cfg.sections.length-1 || !overlaps.every(a=>Number.isFinite(a)&&a>=0) ||
+      !Number.isFinite(cfg.clamp)||cfg.clamp<0)
+    throw Error("请填写夹持长度及每个接头的搭接长度。");
+  let start=-cfg.clamp/1000;
+  const tubes=cfg.sections.map(([length,D0,D1,t0,tipWall,mass],i) => {
+    const t1=Number.isNaN(tipWall)?t0:tipWall;
+    if (![length,D0,D1,t0,t1,mass].every(v=>Number.isFinite(v)&&v>0) ||
+        2*t0>D0+1e-10 || 2*t1>D1+1e-10)
+      throw Error("请检查第 "+(i+1)+" 节的长度、先径、元径、壁厚及质量。壁厚须大于零且不得超过该端半径。");
+    if (length<=(overlaps[i-1]??0)+(overlaps[i]??0))
+      throw Error("第 "+(i+1)+" 节的两端搭接总长须小于该节长度。");
+    const tube={a:start,b:start+length,length,D0,D1,t0,t1,mass,sectionIndex:i};
+    const avgA=(properties(tube,tube.a).A+4*properties(tube,(tube.a+tube.b)/2).A+properties(tube,tube.b).A)/6;
+    tube.massPerVolume=(mass/1000)/(length*avgA);
+    start=tube.b-(overlaps[i]??0);
+    return tube;
+  });
+  const L=tubes.at(-1).b;
+  if (!(L>.1&&L<=15) || cfg.clamp/1000>=tubes[0].length)
+    throw Error("夹持出口须位于第一节，自由长度须在 0.10–15 m。");
+  if(cfg.flex&&!(cfg.K>0&&Number.isFinite(cfg.K))) throw Error("接头转动刚度须为正。");
+  const assemblyLength=L+cfg.clamp/1000, sectionMass=tubes.reduce((sum,t)=>sum+t.mass,0);
+  const Iref=properties(tubes[0],tubes[0].a).I;
+  const tipTube=Btip===null?null:tubes[3];
+  const tipIref=tipTube?properties(tipTube,tipTube.a).I:1;
+  const joints=tubes.slice(1).map((inner,i)=>{
+    const outer=tubes[i],a=inner.a,b=outer.b;
+    const clearance=s=>1000*(properties(outer,s).di-properties(inner,s).D);
+    const end=[clearance(a),clearance(b)];
+    return {a,b,min:Math.min(...end),max:Math.max(...end)};
+  }).filter(j=>j.b-j.a>1e-10);
+  const breaks=[0,L,...tubes.flatMap(t=>[t.a,t.b]).filter(s=>s>1e-9&&s<L-1e-9)].sort((a,b)=>a-b)
+    .filter((v,i,a)=>i===0||v-a[i-1]>1e-9);
+  const cells=[];
+  const span=(active,s)=>{
+    let I=0,tipI=0,D=0;
+    for(const tube of active){
+      const p=properties(tube,s);
+      if(tube===tipTube)tipI+=p.I;
+      else I+=p.I;
+      D=Math.max(D,p.D);
+    }
+    return {ratio:I/Iref,tipRatio:tipI/tipIref,D};
+  };
+  const mu=(active,s)=>active.reduce((sum,t)=>sum+t.massPerVolume*properties(t,s).A,0);
+  const halfWeight=(active,a,b)=>{
+    const half=(b-a)/2,center=(a+b)/2,off=half/Math.sqrt(3);
+    return G*half*(mu(active,center-off)+mu(active,center+off));
+  };
+  for(let j=1;j<breaks.length;j++){
+    const left=breaks[j-1],right=breaks[j],mid=(right+left)/2;
+    const active=tubes.filter(t=>t.a<mid&&t.b>mid);
+    const overlapZone=active.length>1;
+    const joint=joints.find(t=>t.a<mid&&t.b>mid);
+    const compliance=cfg.flex&&joint?1/(cfg.K*(joint.b-joint.a)):0;
+    const n=Math.ceil((right-left)/maxStep),h=(right-left)/n;
+    for(let k=0;k<n;k++){
+      const a=left+k*h,b=k===n-1?right:left+(k+1)*h,c=(a+b)/2;
+      const p=span(active,c),p0=span(active,a),p1=span(active,b);
+      const weight=halfWeight(active,a,b);
+      cells.push({a,b,c,h:b-a,ratio:p.ratio,ratio0:p0.ratio,ratio1:p1.ratio,compliance,
+        tipRatio:p.tipRatio,tipRatio0:p0.tipRatio,tipRatio1:p1.tipRatio,
+        D0:p0.D,D1:p1.D,overlapZone,weight,sectionIndex:active[0].sectionIndex});
+    }
+  }
+  let tail=0;
+  for(let i=cells.length-1;i>=0;i--){
+    const c=cells[i];
+    c.Q=tail+c.weight/2;
+    tail+=c.weight;
+  }
+  return {L,cells,joints,weight:tail,flex:cfg.flex,assemblyLength,sectionMass,Btip,
+    tipStart:tipTube?.a,commonTipRatio:tipTube?tipIref/Iref:null};
+}
+
+function assignStiffness(m,Bref,Btip=m.Btip) {
+  if(!(Number.isFinite(Bref)&&Bref>0))
+    throw Error("几何及自重已计算。请导入实验 CSV 反算刚度，使用梢端落差标定，或输入已知刚度。");
+  for(const c of m.cells){
+    const effective=(ratio,tipRatio)=>1/(1/(Bref*ratio+(Btip??0)*tipRatio)+c.compliance);
+    c.B=effective(c.ratio,c.tipRatio);
+    c.B0=effective(c.ratio0,c.tipRatio0);
+    c.B1=effective(c.ratio1,c.tipRatio1);
+  }
+}
+
+
+function energy(m,theta,Fx,Fy,gScale) {
+  let E=0;
+  for(let i=0;i<m.cells.length;i++){
+    const c=m.cells[i],d=theta[i+1]-theta[i],a=(theta[i+1]+theta[i])/2;
+    E+=c.B*d*d/(2*c.h)-c.h*(Fx*Math.cos(a)+(Fy-gScale*c.Q)*Math.sin(a));
+  }
+  return E;
+}
+function tangent(m,theta,Fx,Fy,gScale) {
+  const n=m.cells.length, residual=new Float64Array(n),diag=new Float64Array(n),off=new Float64Array(n-1);
+  for(let i=0;i<n;i++){
+    const c=m.cells[i],a=(theta[i]+theta[i+1])/2,k=c.B/c.h;
+    const Ry=Fy-gScale*c.Q, sin=Math.sin(a),cos=Math.cos(a);
+    const v=k*(theta[i+1]-theta[i]),p=c.h*(Fx*sin-Ry*cos)/2;
+    const z=c.h*(Fx*cos+Ry*sin)/4;
+    residual[i]+=v+p;
+    diag[i]+=k+z;
+    if(i>0){
+      residual[i-1]+=-v+p;
+      diag[i-1]+=k+z;
+      off[i-1]=-k+z;
+    }
+  }
+  return {residual,diag,off};
+}
+const maxAbs=arr=>arr.reduce((m,x)=>Math.max(m,Math.abs(x)),0);
+
+function newton(m,seed,Fx,Fy,gScale) {
+  let theta=seed.slice();
+  const n=m.cells.length, scale=Math.max(1,(Math.hypot(Fx,Fy)+gScale*m.weight)*m.L);
+  const tol=1e-10*scale;
+  for(let k=0;k<26;k++){
+    const {residual,diag,off}=tangent(m,theta,Fx,Fy,gScale);
+    const norm=maxAbs(residual);
+    const step=residual.map(x=>-x);
+    for(let i=1;i<n;i++){
+      if(!(diag[i-1]>1e-11)) return null;
+      const l=off[i-1]/diag[i-1];
+      diag[i]-=l*off[i-1];
+      step[i]-=l*step[i-1];
+    }
+    if(!(diag[n-1]>1e-11)) return null;
+    if(norm<tol) return {theta,norm};
+    step[n-1]/=diag[n-1];
+    for(let i=n-2;i>=0;i--) step[i]=(step[i]-off[i]*step[i+1])/diag[i];
+    const base=energy(m,theta,Fx,Fy,gScale);
+    const slope=residual.reduce((z,e,i)=>z+e*step[i],0);
+    let accepted=false;
+    for(let a=1;a>=1/512;a/=2){
+      const trial=theta.map((v,i)=>i?v+a*step[i-1]:v);
+      // The gradient check avoids energy cancellation very close to equilibrium.
+      if(energy(m,trial,Fx,Fy,gScale)<=base+1e-4*a*slope ||
+          maxAbs(tangent(m,trial,Fx,Fy,gScale).residual)<norm*.7){
+        theta=trial;accepted=true;break;
+      }
+    }
+    if(!accepted) return null;
+  }
+  return null;
+}
+
+function continueLoad(m,initial,load) {
+  let f=0,df=.18,current=initial;
+  while(f<1-1e-10){
+    const next=Math.min(1,f+df);
+    const attempt=newton(m,current.theta,...load(next));
+    if(attempt){
+      f=next;current=attempt;df=Math.min(.33,df*1.4);
+    }else{
+      df/=2;
+      if(df<1/2048) throw Error("当前加载路径未找到通过稳定性和残差检查的平衡解，请减小载荷或偏角。");
+    }
+  }
+  return current;
+}
+
+function evaluate(m,theta,Fx,Fy,grav,norm,linear=false,alpha=0,centerlineOnly=false) {
+  const n=m.cells.length, x=new Float64Array(n+1), y=new Float64Array(n+1), moment=new Float64Array(n+1);
+  const pts=[{s:0,x:0,y:0,theta:theta[0]}];
+  let bodyMoment=0;
+  for(let i=0;i<n;i++){
+    const c=m.cells[i], a=(theta[i]+theta[i+1])/2;
+    const dx=c.h*(linear?Math.cos(alpha)-(a-alpha)*Math.sin(alpha):Math.cos(a));
+    const dy=c.h*(linear?Math.sin(alpha)+(a-alpha)*Math.cos(alpha):Math.sin(a));
+    x[i+1]=x[i]+dx; y[i+1]=y[i]+dy;
+    pts.push({s:c.b,x:x[i+1],y:y[i+1],theta:theta[i+1]});
+    bodyMoment-=(x[i]+dx/2)*c.weight*grav;
+  }
+  for(let i=n-1;i>=0;i--){
+    const c=m.cells[i], a=linear?alpha:(theta[i]+theta[i+1])/2;
+    moment[i]=moment[i+1]-c.h*(Fx*Math.sin(a)-(Fy-grav*c.Q)*Math.cos(a));
+  }
+  const profile=[];
+  let peak=null;
+  if(!centerlineOnly){
+    m.cells.forEach((c,i)=>{
+      for(const [j,s,B,D,side] of [[i,c.a,c.B0,c.D0,"向梢侧"],[i+1,c.b,c.B1,c.D1,"向根侧"]]){
+        const strain=m.flex&&c.overlapZone?null:Math.abs(moment[j]/B)*D*50;
+        const p={s,x:x[j],y:y[j],theta:theta[j],M:moment[j],B,strain,side};
+        profile.push(p);
+        if(strain!==null&&(!peak||strain>peak.strain)) peak=p;
+      }
+    });
+  }
+  const balance=Math.abs(moment[0]-(x[n]*Fy-y[n]*Fx+bodyMoment));
+  return {pts,profile,peak,tip:pts[n],rootM:moment[0],balance,norm,
+    drop:m.L*Math.sin(theta[0])-y[n]};
+}
+function force(cfg) {
+  return [cfg.mass*G*Math.sin(cfg.beta*deg),-cfg.mass*G*Math.cos(cfg.beta*deg)];
+}
+function solve(m,cfg,centerlineOnly=false) {
+  const alpha=cfg.alpha*deg, [Fx,Fy]=force(cfg), grav=Number(cfg.gravity);
+  const n=m.cells.length;
+  let current={theta:new Float64Array(n+1).fill(alpha),norm:0};
+  if(grav) current=continueLoad(m,current,f=>[0,0,f]);
+  if(cfg.mass>0) current=continueLoad(m,current,f=>[f*Fx,f*Fy,grav]);
+  const result=evaluate(m,current.theta,Fx,Fy,grav,current.norm,false,alpha,centerlineOnly);
+  if(!Number.isFinite(result.balance)||result.balance>1e-8*Math.max(1,Math.abs(result.rootM)))
+    throw Error("根部力矩未通过平衡检查。");
+  return result;
+}
+
+function linear(m,cfg) {
+  const alpha=cfg.alpha*deg,[Fx,Fy]=force(cfg),grav=Number(cfg.gravity);
+  const theta=new Float64Array(m.cells.length+1),bc=new Float64Array(m.cells.length+1);
+  theta[0]=alpha;
+  for(let i=m.cells.length-1;i>=0;i--){
+    const c=m.cells[i];
+    bc[i]=bc[i+1]+c.h*((Fy-grav*c.Q)*Math.cos(alpha)-Fx*Math.sin(alpha));
+  }
+  m.cells.forEach((c,i)=>theta[i+1]=theta[i]+c.h*(bc[i+1]+bc[i])/(2*c.B));
+  return evaluate(m,theta,Fx,Fy,grav,0,true,alpha);
+}
+
+
+function fitStiffness(cfg,grams,millimetres) {
+  const m=model(cfg),target=millimetres/1000;
+  if(!(Number.isFinite(grams)&&grams>0&&Number.isFinite(target)&&target>0&&target<m.L))
+    throw Error("标定挂重须大于零，梢端落差须大于零且小于自由长度。");
+  const cal={...cfg,mass:grams/1000,alpha:0,beta:0,gravity:true};
+  const sag=Bref=>{assignStiffness(m,Bref);return solve(m,cal).drop;};
+  assignStiffness(m,1);
+  let hi=Math.max(1e-4,2*linear(m,cal).drop/target);
+  // Find a stiff endpoint with less sag and a soft endpoint with more sag.
+  let v=sag(hi);
+  if(v>target){
+    for(let i=0;i<20&&v>target;i++){hi*=2;v=sag(hi);}
+    if(v>target)throw Error(m.Btip===null?"未能包围标定落差，请复核挂重与落差。":
+      "固定当前 B₄ 时，增大 B₀ 仍无法让梢端落差降到标定值。请核对 B₄、挂重与落差。");
+  }
+  let lo=hi/2,lv=sag(lo);
+  for(let i=0;i<35&&lv<target;i++){hi=lo;lo/=2;lv=sag(lo);}
+  if(lv<target)throw Error("标定落差未能匹配，请检查几何和加载数据。");
+  for(let i=0;i<42;i++){
+    const b=Math.sqrt(hi*lo),y=sag(b);
+    if(Math.abs(y-target)<.00001)return {B:b,y};
+    if(y>target)lo=b;else hi=b;
+  }
+  const B=Math.sqrt(hi*lo);
+  return {B,y:sag(B)};
+}
+
+
+function csvRows(text){
+  const header=text.trimStart().split(/[\r\n]/,1)[0];
+  const separator=[",",";","\t"].find(character=>header.includes(character))??",";
+  const rows=[];
+  let row=[],cell="",quoted=false;
+  for(let i=0;i<text.length;i++){
+    const character=text[i];
+    if(quoted){
+      if(character!=='"')cell+=character;
+      else if(text[i+1]==='"'){cell+='"';i++;}
+      else quoted=false;
+    }else if(character==='"'&&!cell.trim()){
+      cell="";quoted=true;
+    }else if(character===separator){
+      row.push(cell);cell="";
+    }else if(character==="\r"||character==="\n"){
+      if(character==="\r"&&text[i+1]==="\n")i++;
+      row.push(cell);
+      if(row.some(value=>value.trim()))rows.push(row);
+      row=[];cell="";
+    }else cell+=character;
+  }
+  if(quoted)throw new Error("CSV 中有未闭合的引号。");
+  row.push(cell);
+  if(row.some(value=>value.trim()))rows.push(row);
+  return rows;
+}
+
+function parseExperimentCsv(text){
+  const [columns=[],...rows]=csvRows(text.replace(/^\uFEFF/,""));
+  const header=columns.map(value=>value.trim().toLowerCase());
+  const unit=["mm","m"].find(value=>header.includes("x_"+value)&&header.includes("y_"+value));
+  if(!unit){
+    if(header.includes("x_px")&&header.includes("y_px"))
+      throw new Error("此文件只有像素坐标。请在图片识别程序中填写自由段长度，再导出含毫米坐标的 CSV。");
+    throw new Error("请提供 x_mm、y_mm 或 x_m、y_m 列。可同时提供同单位的弧长 s 列。");
+  }
+  const scale=unit==="mm"?.001:1;
+  const ix=header.indexOf("x_"+unit),iy=header.indexOf("y_"+unit);
+  const is=header.indexOf("s_"+unit),ir=header.indexOf("needs_review"),ia=header.indexOf("clamp_angle_deg");
+  function coordinate(row,index,rowNumber){
+    const field=(row[index]??"").trim();
+    const value=Number(field)*scale;
+    if(!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(field)||!Number.isFinite(value))
+      throw new Error("第 "+rowNumber+" 行的 "+header[index]+" 不是有效数值。");
+    return value;
+  }
+  const points=[];
+  let reviewCount=0;
+  for(const [index,row] of rows.entries()){
+    const rowNumber=index+2;
+    const x=coordinate(row,ix,rowNumber),y=coordinate(row,iy,rowNumber);
+    const previous=points.at(-1);
+    const distance=previous?Math.hypot(x-previous.x,y-previous.y):0;
+    const s=is>=0?coordinate(row,is,rowNumber):(previous?.s??0)+distance;
+    if(!Number.isFinite(s)||!Number.isFinite(distance)||s<0||(previous&&s<previous.s))
+      throw new Error("第 "+rowNumber+" 行弧长有误，请按夹具出口到竿梢的顺序排列。");
+    if(previous&&s===previous.s){
+      if(distance>1e-8)throw new Error("第 "+rowNumber+" 行的相同弧长对应了不同坐标。");
+      continue;
+    }
+    points.push({s,x,y});
+    if(/^(1|true)$/i.test((row[ir]??"").trim()))reviewCount++;
+  }
+  if(points.length<2)throw new Error("至少需要两个不同弧长的有效数据点。");
+  const root=points[0];
+  const rootAligned=root.s===0&&(root.x!==0||root.y!==0);
+  if(rootAligned){
+    const {x,y}=root;
+    for(const p of points){p.x-=x;p.y-=y;}
+  }
+  const angles=ia<0?[]:rows.map(row=>row[ia]?.trim()).filter(Boolean).map(Number);
+  const firstAngle=angles[0];
+  const clampAngle=Number.isFinite(firstAngle)&&angles.every(angle=>Math.abs(angle-firstAngle)<1e-6)?firstAngle:null;
+  return {points,unit,derivedArc:is<0,rootAligned,reviewCount,clampAngle};
+}
+
+// Calls to a sampler use increasing arc length.
+function curveSampler(points){
+  let i=0;
+  return s=>{
+    while(i<points.length-2&&points[i+1].s<s)i++;
+    const a=points[i],b=points[i+1],t=(s-a.s)/(b.s-a.s);
+    return {x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};
+  };
+}
+
+function compareCenterlines(experiment,prediction){
+  const lo=Math.max(experiment[0].s,prediction[0].s);
+  const hi=Math.min(experiment.at(-1).s,prediction.at(-1).s);
+  if(hi<=lo)return null;
+  // On each interval both curves are linear in s. Integrate squared error exactly.
+  const measuredAt=curveSampler(experiment),predictedAt=curveSampler(prediction);
+  function difference(s){
+    const a=measuredAt(s),b=predictedAt(s);
+    return {x:a.x-b.x,y:a.y-b.y};
+  }
+  let a=lo,da=difference(a),ix=0,iy=0;
+  let totalX=0,totalY=0,max=Math.hypot(da.x,da.y),maxS=a;
+  while(a<hi){
+    while(experiment[ix]?.s<=a)ix++;
+    while(prediction[iy]?.s<=a)iy++;
+    const b=Math.min(hi,experiment[ix]?.s??hi,prediction[iy]?.s??hi);
+    const db=difference(b),weight=(b-a)/(3*(hi-lo));
+    totalX+=weight*(da.x**2+da.x*db.x+db.x**2);
+    totalY+=weight*(da.y**2+da.y*db.y+db.y**2);
+    const error=Math.hypot(db.x,db.y);
+    if(error>max){max=error;maxS=b;}
+    a=b;da=db;
+  }
+  return {lo,hi,rmse:Math.sqrt(totalX+totalY),yRmse:Math.sqrt(totalY),max,maxS};
+}
+
+function curveFitDerivatives(trial,fit){
+  const change=.005;
+  const columns=fit.logB.map((value,i)=>{
+    const logB=fit.logB.slice();
+    logB[i]=value+change;
+    let next=trial(logB),step=change;
+    if(!next){
+      logB[i]=value-change;
+      next=trial(logB);step=-change;
+    }
+    if(!next)throw Error("当前数据附近的刚度试算未通过平衡校验，请核对工况或换一条曲线。");
+    return next.residual.map((error,j)=>(error-fit.residual[j])/step);
+  });
+  const [p,q]=columns;
+  const dot=(u,v)=>u.reduce((sum,value,i)=>sum+value*v[i],0);
+  return {a:dot(p,p),b:dot(p,q),d:dot(q,q),g0:dot(p,fit.residual),g1:dot(q,fit.residual)};
+}
+
+async function fitCurveStiffness(cfg,points,signal){
+  if(cfg.sections.length!==4)throw Error("请先选择四节竿或录入四节竿几何。");
+  if(!(Number.isFinite(cfg.mass)&&cfg.mass>=0&&Math.abs(cfg.alpha)<=75&&Math.abs(cfg.beta)<=60))
+    throw Error("请检查当前端载等效质量、夹持角和拉力偏角。");
+  if(cfg.mass===0&&!cfg.gravity)throw Error("当前无端载且关闭了自重，无法由直杆形状反算刚度。");
+  const m=model({...cfg,Btip:1});
+  const first=points[0],tip=points.at(-1);
+  const edgeTolerance=Math.min(.02*m.L,.1*(m.L-m.tipStart));
+  if(!first||first.s>.005||Math.abs(tip.s-m.L)>edgeTolerance)
+    throw Error("请提供覆盖夹具出口到实际竿梢的完整曲线，并核对自由段长度。当前模型自由长度 "+m.L.toFixed(3)+" m。");
+  if(points.filter(p=>p.s<m.tipStart).length<3||points.filter(p=>p.s>m.tipStart).length<3)
+    throw Error("前三节和第四节都需要足够的实测点。请导出包含完整中心线的 CSV。");
+
+  const alpha=cfg.alpha*deg;
+  const transverse=p=>Math.cos(alpha)*p.y-Math.sin(alpha)*p.x;
+  const deflection=maxAbs(points.map(transverse));
+  if(deflection<Math.max(.0005,m.L*.0002))
+    throw Error("这条曲线的弯曲量过小，无法稳定区分两项刚度。请用弯曲更明显的工况。");
+  assignStiffness(m,1,m.commonTipRatio);
+  // The same-modulus linear solution only seeds the nonlinear search.
+  const unitDrop=maxAbs(linear(m,cfg).pts.map(transverse));
+  const seed=unitDrop/deflection || (cfg.mass*G+Number(cfg.gravity)*m.weight)*m.L**2;
+  const center=[Math.log(seed),Math.log(seed*m.commonTipRatio)];
+  const range=Math.log(1e4);
+  const sampleCount=161;
+  const measuredAt=curveSampler(points),hi=Math.min(m.L,tip.s);
+  const targets=Array.from({length:sampleCount},(_,i)=>{
+    const s=first.s+(hi-first.s)*i/(sampleCount-1);
+    return {s,...measuredAt(s),weight:i===0||i===sampleCount-1?Math.SQRT1_2:1};
+  });
+  const breathe=async()=>{
+    if(signal)await new Promise(resolve=>setTimeout(resolve,0));
+    signal?.throwIfAborted();
+  };
+  function trial(logB){
+    if(logB.some((value,i)=>!Number.isFinite(value)||Math.abs(value-center[i])>range))return null;
+    const [B,Btip]=logB.map(Math.exp);
+    assignStiffness(m,B,Btip);
+    let pts;
+    try{pts=solve(m,cfg,true).pts;}catch{return null;}
+    const predict=curveSampler(pts);
+    const residual=new Float64Array(sampleCount*2);
+    let score=0;
+    for(let i=0;i<sampleCount;i++){
+      const t=targets[i],p=predict(t.s),dx=(p.x-t.x)*t.weight,dy=(p.y-t.y)*t.weight;
+      residual[2*i]=dx;residual[2*i+1]=dy;
+      score+=dx*dx+dy*dy;
+    }
+    return {logB,pts,residual,score};
+  }
+
+  const startingPoints=[center,center.map(x=>x+Math.log(3)),center.map(x=>x-Math.log(3))];
+  if(cfg.Bref>0&&cfg.Btip>0)startingPoints.push([Math.log(cfg.Bref),Math.log(cfg.Btip)]);
+  let best=null;
+  for(const start of startingPoints){
+    await breathe();
+    const candidate=trial(start);
+    if(candidate&&(!best||candidate.score<best.score))best=candidate;
+  }
+  if(!best)throw Error("试算未找到稳定平衡，请核对端载、角度和杆节尺寸后重试。");
+
+  let damping=.001,converged=false;
+  for(let i=0;i<38;i++){
+    await breathe();
+    const {a,b,d,g0,g1}=curveFitDerivatives(trial,best);
+    const aa=a*(1+damping)+1e-24,dd=d*(1+damping)+1e-24,det=aa*dd-b*b;
+    const delta=[(b*g1-dd*g0)/det,(b*g0-aa*g1)/det];
+    const span=maxAbs(delta);
+    if(span<1e-5){converged=true;break;}
+    const next=trial(best.logB.map((value,j)=>value+delta[j]/Math.max(1,span)));
+    if(next&&next.score<best.score){
+      best=next;damping=Math.max(1e-8,damping/3);
+    }else{
+      damping*=10;
+      if(damping>1e7)break;
+    }
+  }
+
+  const {a,b,d}=curveFitDerivatives(trial,best);
+  const separation=a>0&&d>0?Math.max(0,1-(b*b)/(a*d)):0;
+  const distinctSensitivity=Math.sqrt(Math.min(a,d)*separation/(sampleCount-1));
+  if(distinctSensitivity<1e-7||best.logB.some((value,i)=>Math.abs(value-center[i])>range-.02))
+    throw Error("这条曲线不足以分辨 B₀ 和 B₄，请检查夹持角和载荷，或使用另一条弯曲更明显的实测曲线。");
+  const [B,Btip]=best.logB.map(Math.exp);
+  const comparison=compareCenterlines(points,best.pts);
+  return {B,Btip,comparison,converged,weak:distinctSensitivity*Math.log(2)<comparison.rmse};
+}
+
+if(typeof module!=="undefined"&&module.exports)
+  module.exports={model,assignStiffness,solve,linear,fitStiffness,fitCurveStiffness,presets,parseExperimentCsv,compareCenterlines};
+
+
+const by=id=>document.getElementById(id);
+const num=id=>by(id).valueAsNumber;
+const checked=id=>by(id).checked;
+const fmt=(v,n=3)=>Number(v.toFixed(n)).toFixed(n);
+
+const sectionLabels=["长度","质量","元径","先径","元端壁厚","先端壁厚"];
+let stiffnessSource="";
+function sectionRows(){
+  return [...by("sections").rows].map(tr=>[...tr.querySelectorAll("input")].map(el=>el.valueAsNumber));
+}
+function jointRows(){
+  return [...by("joints").querySelectorAll("input")].map(el=>el.valueAsNumber);
+}
+function drawFields(sections,overlaps){
+  const fourSections=sections.length===4;
+  by("tip-stiffness-control").hidden=!fourSections;
+  by("tip-stiffness-help").hidden=!fourSections;
+  if(!fourSections)by("Btip").value="";
+  by("sections").innerHTML=sections.map(([l,d0,d1,t0,t1,m],i)=>
+    '<tr><th scope="row">'+(i+1)+'</th>'+[l,m,d0,d1,t0,t1].map((v,j)=>
+    '<td><input aria-label="第 '+(i+1)+' 节 '+sectionLabels[j]+'" type="number" min="0" step="any" value="'+(Number.isFinite(v)?v:"")+'"></td>').join("")+'</tr>').join("");
+  by("joints").innerHTML=overlaps.map((v,i)=>'<label class="formlabel">第 '+(i+1)+'–'+(i+2)+' 节搭接 (mm)<input type="number" min="0" step="any" value="'+(Number.isFinite(v)?v:"")+'"></label>').join("");
+}
+function switchPreset(){
+  const key=by("preset").value,p=presets[key];
+  const measured=key==="measured";
+  const needsCalibration=p.Bref==null;
+  by("clamp").value=p.clamp??"";
+  by("measured-length").value=p.length??"";
+  by("measured-mass").value=p.mass??"";
+  by("Bref").value=p.Bref??"";
+  by("Btip").value="";
+  by("section-count").value=p.sections.length;
+  by("section-count-label").hidden=!measured;
+  by("cal-mass").value="";by("cal-drop").value="";
+  stiffnessSource=needsCalibration?"":"示例刚度";
+  by("fit-note").textContent=measured?"录入实测几何和质量后，再标定刚度。":needsCalibration?"实测尺寸和质量已载入。可导入实验曲线反算刚度，或用梢端落差标定。":"当前曲线使用示例刚度。";
+  drawFields(p.sections,p.overlaps);
+  if(needsCalibration){
+    by("data-settings").open=true;
+    by("stiffness-settings").open=true;
+  }
+}
+function parameters(){
+  const tipInput=by("Btip");
+  const Btip=tipInput.value===""&&!tipInput.validity.badInput?null:tipInput.valueAsNumber;
+  return {overlaps:jointRows(),clamp:num("clamp"),sections:sectionRows().map(([l,m,d0,d1,t0,t1])=>[l,d0,d1,t0,t1,m]),
+    measuredLength:num("measured-length"),measuredMass:num("measured-mass"),Bref:num("Bref"),Btip,
+    mass:num("mass")/1000,alpha:num("alpha"),beta:num("beta"),K:num("K"),flex:checked("flex"),gravity:checked("gravity")};
+}
+function geometrySummary(c,m){
+  const warnings=[];
+  if(Number.isFinite(c.measuredLength)&&Math.abs(c.measuredLength-m.assemblyLength)>.005)
+    warnings.push("装配计算长与实测总长相差 "+fmt((m.assemblyLength-c.measuredLength)*1000,1)+" mm");
+  if(Number.isFinite(c.measuredMass)&&Math.abs(c.measuredMass-m.sectionMass)>Math.max(1,.01*m.sectionMass))
+    warnings.push("各节质量之和与实测总质量相差 "+fmt(m.sectionMass-c.measuredMass,1)+" g");
+  if(m.joints.some(j=>j.min<-.01))warnings.push("简化截面出现名义过盈，请核对接头尺寸");
+  const note=presets[by("preset").value].note;
+  by("geometry").textContent="装配计算长 "+fmt(m.assemblyLength,3)+" m。各节质量之和 "+fmt(m.sectionMass,1)+
+    " g。自由段质量 "+fmt(m.weight/G*1000,1)+" g。"+
+    (warnings.length?" 核对项："+warnings.join("；")+"。":"")+(note?" "+note:"");
+  return warnings;
+}
+
+
+const paths={main:"#087263",straight:"#8c9b95",noGravity:"#6558a7",linear:"#ad512c",experiment:"#b13628",
+  sections:["#087263","#2163b5","#8e3ba6","#996000","#467421","#a73b63",
+    "#008197","#855137","#504799","#5d684c","#966d28","#635971"],
+  multi:["#919e98","#3d87a1","#789551","#498f82","#a1734a"]};
+let experiment=null,experimentRevision=0,curveFitJob=null;
+const experimentHint=embedded?"在「图像识别」中将实测曲线送入模型，或导入已有的实验 CSV。":
+  "导入图片识别程序导出的毫米 CSV，可对照曲线或反算四节竿的刚度。";
+
+function sampleConditions(filename){
+  const match=filename.match(/^(28 3450|37 3437) (\d+(?:\.\d+)?)(?:_中心线\.csv|\.(?:jpe?g|png|bmp|tiff?|webp))$/i);
+  if(!match||!Number.isFinite(Number(match[2])))return null;
+  const rod=match[1].slice(0,2);
+  return {rod,preset:"actual"+rod,grams:Number(match[2])};
+}
+
+function curveFitStatus(message,warning=false){
+  const note=by("curve-fit-note");
+  note.textContent=message;
+  note.classList.toggle("warning",warning);
+}
+
+function resetCurveFit(){
+  curveFitJob?.abort();
+  curveFitJob=null;
+  by("curve-fit-values").hidden=true;
+  curveFitStatus("");
+}
+
+function refreshCurveFitControls(cfg){
+  const button=by("fit-curve");
+  button.disabled=!experiment||cfg.sections.length!==4||Boolean(curveFitJob);
+  button.textContent=curveFitJob?"正在反算…":"反算 B₀ 和 B₄";
+  const settingsButton=by("use-experiment-settings"),sample=experiment?.sample;
+  const angle=experiment?.clampAngle,hasAngle=angle!=null&&Math.abs(angle)<=75;
+  settingsButton.hidden=!sample&&!hasAngle;
+  settingsButton.disabled=Boolean(curveFitJob);
+  settingsButton.textContent=sample?"采用样例工况（"+sample.rod+" 调，"+sample.grams+" g）":
+    hasAngle?"采用"+(experiment.source==="photo"?"实测":" CSV ")+"夹持角（"+fmt(angle,2)+"°）":"采用夹持角";
+  if(!experiment)return;
+  const mass=Number.isFinite(cfg.mass)?fmt(cfg.mass*1000,2)+" g":"待填写";
+  const label=by("preset").selectedOptions[0].textContent;
+  by("curve-fit-condition").textContent="当前工况 · "+label+" · 端载 "+mass+" · 夹持角 "+
+    (Number.isFinite(cfg.alpha)?cfg.alpha+"°":"待填写")+" · 拉力偏角 "+cfg.beta+"° · "+
+    (cfg.gravity?"计入自重":"关闭自重")+(cfg.sections.length===4?"":"。反算需要四节竿几何。");
+}
+
+function experimentSeries(){
+  return {name:"实验参照曲线",color:paths.experiment,dash:true,experiment:true,pts:experiment.points};
+}
+
+function importStatus(message,error=false){
+  const note=by("experiment-import-note");
+  note.textContent=message;
+  note.classList.toggle("error",error);
+}
+
+function showExperiment(imported,name,source){
+  experiment={...imported,sample:sampleConditions(name),source};
+  by("experiment-clear").hidden=false;
+  const notes=[name+" · "+imported.points.length+" 个点 · "+
+    (source==="photo"?"来自图像识别（mm）":"原文件单位 "+imported.unit)];
+  if(imported.derivedArc)notes.push("弧长由相邻坐标累加");
+  if(imported.rootAligned)notes.push("已将夹具出口平移至原点");
+  if(imported.points[0].s>0)notes.push("数据从非零弧长开始，沿用原坐标");
+  if(imported.clampAngle!==null)notes.push("记录夹持角 "+fmt(imported.clampAngle,2)+"°");
+  if(imported.reviewCount)notes.push(imported.reviewCount+" 个待复核点已计入比较");
+  importStatus(notes.join(" · "));
+  schedule();
+}
+
+function importRecognizedCurve({name,points,reviewCount,clampAngle}){
+  const converted=points.map(([s,x,y])=>({s:s*.001,x:x*.001,y:y*.001}));
+  if(converted.length<2||converted.at(-1).s<=0||
+    !converted.every(({s,x,y},i)=>[s,x,y].every(Number.isFinite)&&(i===0?s===0:s>converted[i-1].s)))
+    throw new Error("实测曲线的毫米坐标或弧长无效。");
+  experimentRevision++;
+  resetCurveFit();
+  showExperiment({points:converted,reviewCount,clampAngle},name,"photo");
+}
+
+function renderExperimentReport(prediction){
+  by("experiment-report").hidden=!experiment;
+  by("experiment-values").hidden=true;
+  if(!experiment)return;
+  const coverage=by("experiment-coverage");
+  if(!prediction){
+    coverage.textContent="实验曲线已显示。模型求解成功后会计算误差。";
+    return;
+  }
+  const points=experiment.points,measuredEnd=points.at(-1),predictedEnd=prediction.at(-1);
+  const lengths="实验末端 s = "+fmt(measuredEnd.s,4)+" m，模型自由长度 "+fmt(predictedEnd.s,4)+" m。";
+  const result=compareCenterlines(points,prediction);
+  if(!result){
+    coverage.textContent=lengths+"两条曲线没有可比较的共同弧长区间。";
+    return;
+  }
+  coverage.textContent="共同弧长 "+fmt(result.lo,4)+"–"+fmt(result.hi,4)+" m。"+lengths;
+  const mm=value=>fmt(value*1000,2)+" mm";
+  const endDelta=measuredEnd.y-predictedEnd.y;
+  by("experiment-rmse").textContent=mm(result.rmse);
+  by("experiment-y-rmse").textContent=mm(result.yRmse);
+  by("experiment-max").textContent=mm(result.max);
+  by("experiment-max-s").textContent="s = "+fmt(result.maxS,4)+" m";
+  by("experiment-tip-y").textContent=(endDelta>=.000005?"+":"")+mm(endDelta);
+  by("experiment-tip-detail").textContent="相对夹具出口水平面，实验末点 y = "+mm(measuredEnd.y)+
+    "，模型竿梢 y = "+mm(predictedEnd.y)+"。";
+  by("experiment-values").hidden=false;
+}
+
+function niceStep(span){
+  const base=10**Math.floor(Math.log10(span/5));
+  return [1,2,2.5,5,10].map(x=>x*base).find(x=>x>=span/6)??10*base;
+}
+function ticks(lo,hi,step){
+  const out=[];
+  for(let i=Math.ceil((lo-1e-9)/step);i<=Math.floor((hi+1e-9)/step);i++) out.push(i*step);
+  return out;
+}
+const label=v=>Number(v.toFixed(3));
+
+function sectionSeries(model, points){
+  const series=[];
+  let start=0;
+  for(let end=1;end<=model.cells.length;end++){
+    // Both tubes share the centerline in an overlap. Color it by the outer tube.
+    const index=model.cells[start].sectionIndex;
+    if(model.cells[end]?.sectionIndex===index)continue;
+    series.push({name:"第 "+(index+1)+" 节",color:paths.sections[index],main:true,pts:points.slice(start,end+1)});
+    start=end;
+  }
+  return series;
+}
+
+function curvePlot(series,L){
+  const w=760,h=410,left=65,right=724,top=20,bottom=360;
+  let xmin=0,xmax=.15*L,ymin=-.08*L,ymax=.07*L;
+  for(const s of series)for(const p of s.pts){
+    xmin=Math.min(xmin,p.x);xmax=Math.max(xmax,p.x);
+    ymin=Math.min(ymin,p.y);ymax=Math.max(ymax,p.y);
+  }
+  const pad=.045*Math.max(L,xmax-xmin,ymax-ymin);
+  const cx=(xmin+xmax)/2,cy=(ymin+ymax)/2;
+  const px=Math.min((right-left)/(xmax-xmin+2*pad),(bottom-top)/(ymax-ymin+2*pad));
+  xmin=cx-(right-left)/(2*px);xmax=cx+(right-left)/(2*px);
+  ymin=cy-(bottom-top)/(2*px);ymax=cy+(bottom-top)/(2*px);
+  const X=x=>left+(x-xmin)*px,Y=y=>top+(ymax-y)*px,step=niceStep(Math.max(xmax-xmin,ymax-ymin));
+  let svg='<rect x="'+left+'" y="'+top+'" width="'+(right-left)+'" height="'+(bottom-top)+'" fill="#f7faf8"/>';
+  for(const v of ticks(xmin,xmax,step)) svg+='<path d="M'+X(v)+' '+top+' V'+bottom+'" stroke="'+(v===0?"#a9bdb3":"#e1ebe5")+'"/><text x="'+X(v)+'" y="381" text-anchor="middle">'+label(v)+'</text>';
+  for(const v of ticks(ymin,ymax,step)) svg+='<path d="M'+left+' '+Y(v)+' H'+right+'" stroke="'+(v===0?"#a9bdb3":"#e1ebe5")+'"/><text x="56" y="'+(Y(v)+4)+'" text-anchor="end">'+label(v)+'</text>';
+  for(const s of series){
+    const stride=Math.max(1,Math.ceil(s.pts.length/4000));
+    const drawPoints=stride>1?s.pts.filter((_,i)=>i%stride===0||i===s.pts.length-1):s.pts;
+    const d=drawPoints.map((p,i)=>(i?"L":"M")+X(p.x).toFixed(2)+" "+Y(p.y).toFixed(2)).join("");
+    svg+='<path d="'+d+'" fill="none" stroke="'+s.color+'" stroke-width="'+(s.main?3.5:s.experiment?2.8:2)+'" '+(s.dash?'stroke-dasharray="6 5"':"")+'/>';
+    if(s.main){
+      const first=s.pts[0],tip=s.pts.at(-1);
+      if(first.s===0)svg+='<circle cx="'+X(first.x)+'" cy="'+Y(first.y)+'" r="4" fill="#142b28"/>';
+      if(tip.s===L)svg+='<circle cx="'+X(tip.x)+'" cy="'+Y(tip.y)+'" r="4.5" fill="'+s.color+'"/>';
+    }
+    if(s.experiment){const p=s.pts.at(-1);svg+='<circle cx="'+X(p.x)+'" cy="'+Y(p.y)+'" r="5.2" fill="none" stroke="'+s.color+'" stroke-width="1.8"/>';}
+  }
+  svg+='<g fill="#46635f"><text x="400" y="404" text-anchor="middle">水平坐标 x / m</text><text transform="translate(14 190) rotate(-90)" text-anchor="middle">竖直坐标 y / m</text></g>';
+  by("curve").innerHTML=svg;
+  by("legend").innerHTML=series.map(s=>'<span><i class="key '+(s.dash?"dash":"")+'" style="--key:'+s.color+'"></i>'+s.name+'</span>').join("");
+}
+
+let field="strain",last=null;
+function profilePlot(){
+  if(!last)return;
+  const {m,r}=last, x0=66,x1=720,y0=16,y1=183;
+  const value=p=>field==="B"?Math.log10(p.B):p[field];
+  const vals=r.profile.map(value).filter(Number.isFinite);
+  const max=Math.max(0,...vals),min=Math.min(0,...vals),span=Math.max(max-min,field==="strain"?.001:.01);
+  const lo=field==="B"?Math.floor(Math.min(...vals)):min-(min<0?span*.07:0);
+  let hi=field==="B"?Math.ceil(Math.max(...vals)):max+(max>0||min===0?span*.11:0);
+  if(hi<=lo)hi=lo+1;
+  const X=s=>x0+(x1-x0)*s/m.L,Y=v=>y1-(y1-y0)*(v-lo)/(hi-lo);
+  let svg='<rect x="'+x0+'" y="'+y0+'" width="'+(x1-x0)+'" height="'+(y1-y0)+'" fill="#f7faf8"/>';
+  for(const j of m.joints){
+    const a=Math.max(0,j.a), b=Math.min(m.L,j.b);
+    if(b>a)svg+='<rect x="'+X(a)+'" y="'+y0+'" width="'+(X(b)-X(a))+'" height="'+(y1-y0)+'" fill="#e0eee7"/>';
+  }
+  const step=field==="B"?Math.max(1,Math.ceil((hi-lo)/6)):niceStep(hi-lo);
+  for(const v of ticks(lo,hi,step))svg+='<path d="M'+x0+' '+Y(v)+' H'+x1+'" stroke="#dce8e1"/><text x="59" y="'+(Y(v)+4)+'" text-anchor="end">'+(field==="B"?"10^"+label(v):label(v))+'</text>';
+  for(const v of ticks(0,m.L,niceStep(m.L)))svg+='<text x="'+X(v)+'" y="203" text-anchor="middle">'+label(v)+'</text>';
+  let d="",start=true;
+  for(const p of r.profile){
+    const v=value(p);
+    if(!Number.isFinite(v)){start=true;continue;}
+    d+=(start?"M":"L")+X(p.s).toFixed(2)+" "+Y(v).toFixed(2);start=false;
+  }
+  const title={strain:"名义应变 / %",M:"弯矩 / N·m",B:"刚度 / N·m²"}[field];
+  svg+='<path d="'+d+'" fill="none" stroke="'+paths.main+'" stroke-width="2.1"/><text x="390" y="225" text-anchor="middle">距夹持出口的弧长 s / m</text><text transform="translate(13 100) rotate(-90)" text-anchor="middle">'+title+'</text>';
+  by("profile").innerHTML=svg;
+  by("profile-note").textContent=field==="strain"&&m.flex?"浅色带为搭接区。启用接头柔度时，搭接区的局部管壁应变留空。":"浅色带为搭接区。"+(field==="B"?"刚度纵轴采用对数刻度。":"");
+}
+
+function draw(){
+  const c=parameters();
+  refreshCurveFitControls(c);
+  const validMass=Number.isFinite(c.mass)&&c.mass>=0;
+  by("beta-value").textContent=c.beta+"°";
+  by("k-control").hidden=!c.flex;
+  by("load-text").textContent="端部力 "+(validMass?fmt(c.mass*G,2)+" N":"—");
+  last=null;by("export").disabled=true;by("geometry").textContent="";
+  try{
+    if(!validMass)throw new Error("请输入大于或等于 0 的端载等效质量（g）。");
+    const angleInput=by("alpha");
+    if(!angleInput.validity.valid)throw new Error("请输入 "+angleInput.min+"° 至 "+angleInput.max+"° 的夹持角。");
+    const m=model(c),warnings=geometrySummary(c,m);
+    assignStiffness(m,c.Bref);
+    const r=solve(m,c);
+    const series=[{name:"初始轴线",color:paths.straight,dash:true,pts:[{x:0,y:0},{x:m.L*Math.cos(c.alpha*deg),y:m.L*Math.sin(c.alpha*deg)}]}];
+    const failed=[];
+    function comparison(name,color,dash,calculate){
+      try{series.push({name,color,dash,pts:calculate().pts});}catch(e){failed.push(name);}
+    }
+    if(checked("multi"))[0,.1,.2,.5,1].forEach((mass,i)=>{
+      if(Math.abs(mass-c.mass)>1e-9)comparison(Math.round(mass*1000)+" g",paths.multi[i],false,()=>solve(m,{...c,mass}));
+    });
+    if(c.gravity&&checked("no-gravity"))comparison("不计自重",paths.noGravity,true,()=>solve(m,{...c,gravity:false}));
+    if(checked("linear"))comparison("小转角近似",paths.linear,true,()=>linear(m,c));
+    series.push(...sectionSeries(m,r.pts));
+    if(experiment)series.push(experimentSeries());
+    curvePlot(series,m.L);
+    renderExperimentReport(r.pts);
+    last={c,m,r};profilePlot();
+    by("tip-x").textContent=fmt(r.tip.x)+" m";
+    by("tip-drop").textContent=fmt(r.drop)+" m";
+    by("root-m").textContent=fmt(r.rootM,2)+" N·m";
+    by("strain-max").textContent=r.peak?fmt(r.peak.strain)+"%":"—";
+    const bad=warnings.length>0;
+    by("status").className="status small"+(bad?" error":"");
+    by("status").textContent="平衡校验通过 · 自由长度 "+fmt(m.L,3)+" m · "+stiffnessSource+
+      (m.Btip!==null?" · 第 4 节刚度独立计算":"")+
+      (bad?" · 请核对实测数据":"")+(failed.length?" · 部分对照工况未收敛":"");
+    by("export").disabled=false;
+  }catch(e){
+    by("status").className="status small error";
+    by("status").textContent=e.message;
+    ["curve","profile","legend"].forEach(id=>by(id).textContent="");
+    ["tip-x","tip-drop","root-m","strain-max"].forEach(id=>by(id).textContent="—");
+    if(experiment)curvePlot([experimentSeries()],Math.max(.01,experiment.points.at(-1).s));
+    renderExperimentReport(null);
+  }
+}
+let pending=0;
+function schedule(){cancelAnimationFrame(pending);pending=requestAnimationFrame(draw);}
+
+by("experiment-open").onclick=()=>by("experiment-file").click();
+by("experiment-file").onchange=async event=>{
+  const input=event.currentTarget,file=input.files[0];
+  if(!file)return;
+  input.value="";
+  const revision=++experimentRevision;
+  resetCurveFit();
+  experiment=null;
+  by("experiment-clear").hidden=false;
+  importStatus("正在读取 "+file.name+"…");
+  schedule();
+  try{
+    const imported=parseExperimentCsv(await file.text());
+    if(revision!==experimentRevision)return;
+    showExperiment(imported,file.name,"csv");
+  }catch(error){
+    if(revision!==experimentRevision)return;
+    by("experiment-clear").hidden=true;
+    importStatus(error.message,true);
+  }
+};
+by("experiment-clear").onclick=()=>{
+  experimentRevision++;
+  resetCurveFit();
+  experiment=null;
+  by("experiment-clear").hidden=true;
+  importStatus(experimentHint);
+  schedule();
+  by("experiment-open").focus();
+};
+document.querySelectorAll(".tabs button").forEach(btn=>btn.onclick=()=>{
+  field=btn.dataset.field;
+  document.querySelectorAll(".tabs button").forEach(el=>el.setAttribute("aria-pressed",String(el===btn)));profilePlot();
+});
+by("preset").onchange=()=>{resetCurveFit();switchPreset();schedule();};
+
+by("use-experiment-settings").onclick=()=>{
+  const {sample,clampAngle}=experiment;
+  resetCurveFit();
+  if(sample){
+    if(by("preset").value!==sample.preset){
+      by("preset").value=sample.preset;
+      switchPreset();
+    }
+    by("mass").value=sample.grams;
+    by("beta").value=0;
+    by("gravity").checked=true;
+  }
+  if(clampAngle!==null&&Math.abs(clampAngle)<=75)by("alpha").value=clampAngle;
+  if(sample&&clampAngle===null)curveFitStatus("已设置样例竿型和竖挂质量。请按照片核对夹持角。");
+  schedule();
+};
+
+by("fit-curve").onclick=async()=>{
+  if(!experiment||curveFitJob)return;
+  const job=new AbortController(),cfg=parameters();
+  curveFitJob=job;
+  by("curve-fit-values").hidden=true;
+  curveFitStatus("正在用当前工况拟合整条中心线…");
+  refreshCurveFitControls(cfg);
+  try{
+    const fit=await fitCurveStiffness(cfg,experiment.points,job.signal);
+    if(job.signal.aborted)return;
+    const show=value=>Number(value.toPrecision(7)).toString();
+    by("Bref").value=by("curve-fit-base").textContent=show(fit.B);
+    by("Btip").value=by("curve-fit-tip").textContent=show(fit.Btip);
+    by("curve-fit-rmse").textContent=fmt(fit.comparison.rmse*1000,2)+" mm";
+    by("curve-fit-values").hidden=false;
+    stiffnessSource="实验曲线反算";
+    by("fit-note").textContent="B₀ 和 B₄ 来自实验曲线反算。可换另一个挂重工况检验预测。";
+    const warning=fit.weak?" 当前曲线对一项或两项刚度的区分较弱，建议换工况复核。":"";
+    curveFitStatus((fit.converged?"已应用反算结果。":"已应用当前拟合结果，迭代未达到收敛阈值。")+warning+
+      " 可保持刚度，换另一条曲线验证。",fit.weak||!fit.converged);
+  }catch(error){
+    if(!job.signal.aborted)curveFitStatus(error.message,true);
+  }finally{
+    if(curveFitJob===job){
+      curveFitJob=null;
+      draw();
+    }
+  }
+};
+
+by("fit").onclick=()=>{
+  const note=by("fit-note");
+  try{
+    const cfg=parameters();
+    const fit=fitStiffness(cfg,num("cal-mass"),num("cal-drop"));
+    resetCurveFit();
+    by("Bref").value=Number(fit.B.toPrecision(8));
+    stiffnessSource="实测落差标定";
+    note.textContent=(cfg.Btip===null?"":"固定第 4 节刚度 B₄ 后，")+"标定 B₀ 为 "+fmt(fit.B,3)+
+      " N·m²。回算梢端落差 "+fmt(fit.y*1000,1)+" mm。请用另一挂重或夹持角验证。";
+    draw();
+  }catch(e){note.textContent=e.message;}
+};
+function clearFit(){
+  const fromCurve=stiffnessSource==="实验曲线反算";
+  if(!fromCurve&&stiffnessSource!=="实测落差标定")return;
+  by("Bref").value="";
+  if(fromCurve)by("Btip").value="";
+  stiffnessSource="";
+  by("fit-note").textContent="标定所用的模型参数已修改，请重新标定刚度。";
+}
+by("section-count").onchange=()=>{
+  const n=num("section-count");
+  if(!Number.isInteger(n)||n<1||n>12){by("section-count").value=sectionRows().length;return;}
+  const old=sectionRows().map(([l,m,d0,d1,t0,t1])=>[l,d0,d1,t0,t1,m]),js=jointRows();
+  resetCurveFit();
+  drawFields(Array.from({length:n},(_,i)=>old[i]??Array(6).fill(null)),
+    Array.from({length:n-1},(_,i)=>js[i]??null));
+  clearFit();schedule();
+};
+document.body.addEventListener("input",e=>{
+  const el=e.target;
+  if(!el.matches("input")||["cal-mass","cal-drop","section-count","experiment-file"].includes(el.id))return;
+  const geometryChanged=["clamp","flex","K"].includes(el.id)||el.closest("#sections,#joints");
+  const stiffnessChanged=["Bref","Btip"].includes(el.id);
+  if(geometryChanged||stiffnessChanged||["mass","alpha","beta","gravity"].includes(el.id))resetCurveFit();
+  if(el.id==="Bref"||(el.id==="Btip"&&stiffnessSource==="实验曲线反算")){
+    stiffnessSource="手动输入刚度";
+    by("fit-note").textContent=Number.isFinite(num("Bref"))?"按当前输入的基准刚度计算。":"请标定或输入基准刚度。";
+  }else if(geometryChanged||el.id==="Btip"){
+    clearFit();
+  }
+  schedule();
+});
+
+
+by("export").onclick=async()=>{
+  if(!last)return;
+  const {r,c,m}=last;
+  const csv=["s_m,x_m,y_m,theta_deg,bending_moment_Nm,EI_Nm2,nominal_strain_pct,section_side,mass_equiv_kg,clamp_deg,load_deg,self_weight,joint_K_Nm_per_rad,reference_stiffness_Nm2,tip_section_butt_stiffness_Nm2"];
+  for(const p of r.profile)csv.push([p.s,p.x,p.y,p.theta/deg,p.M,p.B,p.strain].map(v=>v===null?"":v.toPrecision(9)).concat(p.side,c.mass,c.alpha,c.beta,+c.gravity,c.flex?c.K:"",c.Bref,m.Btip??"").join(","));
+  const filename="鱼竿变形_"+c.mass.toFixed(2)+"kg.csv";
+  if(embedded){
+    try{await window.parent.saveRodCsv(filename,csv.join("\r\n"));}
+    catch(error){
+      by("status").className="status small error";
+      by("status").textContent="CSV 保存失败："+error.message;
+    }
+    return;
+  }
+  const blob=new Blob(["\uFEFF",csv.join("\r\n")],{type:"text/csv;charset=utf-8"});
+  const link=document.createElement("a");
+  link.href=URL.createObjectURL(blob);link.download=filename;link.click();
+  setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+};
+importStatus(experimentHint);switchPreset();draw();
+
+</script>
+</body>
+</html>
+

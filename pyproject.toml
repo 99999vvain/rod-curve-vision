@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rod-curve-vision"
+version = "1.1.0"
+description = "从侧视照片提取鱼竿变形中心线并反算弯曲刚度"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "林卫叙"},
+    {name = "王飞扬"},
+]
+keywords = ["fishing-rod", "centerline", "large-deflection", "stiffness-inversion", "opencv"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+    "numpy>=1.26",
+    "opencv-python-headless>=4.10",
+    "scipy>=1.15",
+    "Pillow>=10",
+]
+
+[project.optional-dependencies]
+gui = ["matplotlib>=3.8"]
+dev = ["matplotlib>=3.8", "pytest>=8"]
+
+[project.scripts]
+rodcurve = "rodcurve.cli:main"
+rodcurve-web = "rodcurve.server:main"
+
+[project.urls]
+Homepage = "https://github.com/99999vvain/rod-curve-vision"
+Issues = "https://github.com/99999vvain/rod-curve-vision/issues"
+
+[tool.setuptools]
+packages = ["rodcurve"]
+
+[tool.setuptools.package-data]
+rodcurve = ["webui/*.html", "webui/*.js"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
